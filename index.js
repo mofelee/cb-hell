@@ -41,24 +41,72 @@ var fn4 = function(data, cb) {
 //   .then(fn3)
 //   .then(fn4);
 
-var tasks = [
-  fn1,
-  fn2,
-  fn3,
-  fn4
-];
 
-function next(data, cb){
+// function warp(fn1, data){
+//   var warpedTasks = [fn1];
+//
+//   var next = function(data, cb){
+//     var currentTask = warpedTasks.shift();
+//
+//     if(currentTask){
+//       currentTask(data, next);
+//     }
+//   };
+//
+//   return {
+//     then: function(fn){
+//       warpedTasks.push(fn);
+//
+//       next(data);
+//
+//     }
+//   };
+// }
+//
+// warp(fn1, 'begin')
+//   .then(function(data){
+//     console.log(data);
+//   });
 
-  var currentTask = tasks.shift();
+var execSeries = function(){
+  var data = arguments[0];
+  var tasks = Array.prototype.slice.call(arguments, 1);
 
-  if(currentTask){
-    currentTask(data, next);
+  next(data);
+
+  function next(data, cb){
+
+    var currentTask = tasks.shift();
+
+    if(currentTask){
+      currentTask(data, next);
+    }
   }
-}
+};
 
-tasks.push(function(r4){
-  console.log(r4);
+execSeries('begin', fn1, fn2, fn3, fn4, function(data){
+  console.log(data);
 });
 
-next('begin');
+//
+// var tasks = [
+//   fn1,
+//   fn2,
+//   fn3,
+//   fn4
+// ];
+//
+// function next(data, cb){
+//
+//   var currentTask = tasks.shift();
+//
+//   if(currentTask){
+//     currentTask(data, next);
+//   }
+// }
+//
+// tasks.push(function(r4){
+//   console.log(r4);
+// });
+//
+// next('begin');
