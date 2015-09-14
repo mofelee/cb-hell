@@ -36,57 +36,59 @@ var fn4 = function(data, cb) {
 //    });
 //});
 
-// warp(fn1, 'begin')
-//   .then(fn2)
-//   .then(fn3)
-//   .then(fn4);
+function warp(fn1, data){
+  var warpedTasks = [fn1];
 
-
-// function warp(fn1, data){
-//   var warpedTasks = [fn1];
-//
-//   var next = function(data, cb){
-//     var currentTask = warpedTasks.shift();
-//
-//     if(currentTask){
-//       currentTask(data, next);
-//     }
-//   };
-//
-//   return {
-//     then: function(fn){
-//       warpedTasks.push(fn);
-//
-//       next(data);
-//
-//     }
-//   };
-// }
-//
-// warp(fn1, 'begin')
-//   .then(function(data){
-//     console.log(data);
-//   });
-
-var execSeries = function(){
-  var data = arguments[0];
-  var tasks = Array.prototype.slice.call(arguments, 1);
-
-  next(data);
-
-  function next(data, cb){
-
-    var currentTask = tasks.shift();
+  var next = function(data, cb){
+    var currentTask = warpedTasks.shift();
 
     if(currentTask){
       currentTask(data, next);
     }
-  }
-};
+  };
 
-execSeries('begin', fn1, fn2, fn3, fn4, function(data){
-  console.log(data);
-});
+  var service =  {
+    then: function(fn){
+      warpedTasks.push(fn);
+
+      return service;
+    }
+  };
+
+  process.nextTick(function(){
+    next(data);
+  });
+
+  return service;
+}
+
+warp(fn1, 'begin')
+  .then(fn2)
+  .then(fn3)
+  .then(fn4)
+  .then(function(data){
+    console.log(data);
+  });
+
+// var execSeries = function(){
+//   var data = arguments[0];
+//   var tasks = Array.prototype.slice.call(arguments, 1);
+//
+//   next(data);
+//
+//   function next(data, cb){
+//
+//     var currentTask = tasks.shift();
+//
+//     if(currentTask){
+//       currentTask(data, next);
+//     }
+//   }
+// };
+//
+// execSeries('begin', fn1, fn2, fn3, fn4, function(data){
+//   console.log(data);
+// });
 
 //
 // var tasks = [
