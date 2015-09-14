@@ -50,6 +50,9 @@ var myEventEmiter = function(){
     },
     emit: function(name, data){
       process.nextTick(function(){
+        if(!myEvents[name]){
+          throw '找不到事件' + name;
+        }
         myEvents[name](data);
       });
     }
@@ -60,43 +63,68 @@ var myEventEmiter = function(){
 
 var events = myEventEmiter();
 
+fn1('begin', function(data){
+  events.emit('callFn2');
+});
 
-///////
-function warp(fn1, data){
-  var warpedTasks = [fn1];
-
-  var service =  {
-    then: function(fn){
-      warpedTasks.push(fn);
-
-      return service;
-    }
-  };
-  //////////
-  var finished = function(data){
-    events.emit('finished', data);
-  };
-
-  events.on('finished', function(data){
-    var currentTask = warpedTasks.shift();
-
-    if(currentTask){
-        currentTask(data, finished);
-    }
+events.on('callFn2', function(data){
+  fn2(data, function(data2){
+    events.emit('callFn3', data2);
   });
+});
 
-  events.emit('finished');
-
-  return service;
-}
-
-warp(fn1, 'begin')
-  .then(fn2)
-  .then(fn3)
-  .then(fn4)
-  .then(function(data){
-    console.log(data);
+events.on('callFn3', function(data){
+  fn3(data, function(data3){
+    events.emit('callFn4', data3);
   });
+});
+
+events.on('callFn4', function(data){
+  fn4(data, function(data4){
+    events.emit('callCb', data4);
+  });
+});
+
+events.on('callCb', function(data){
+  console.log(data);
+});
+
+// ///////
+// function warp(fn1, data){
+//   var warpedTasks = [fn1];
+//
+//   var service =  {
+//     then: function(fn){
+//       warpedTasks.push(fn);
+//
+//       return service;
+//     }
+//   };
+//   //////////
+//   var finished = function(data){
+//     events.emit('finished', data);
+//   };
+//
+//   events.on('finished', function(data){
+//     var currentTask = warpedTasks.shift();
+//
+//     if(currentTask){
+//         currentTask(data, finished);
+//     }
+//   });
+//
+//   events.emit('finished');
+//
+//   return service;
+// }
+//
+// warp(fn1, 'begin')
+//   .then(fn2)
+//   .then(fn3)
+//   .then(fn4)
+//   .then(function(data){
+//     console.log(data);
+//   });
 
 // var execSeries = function(){
 //   var data = arguments[0];
