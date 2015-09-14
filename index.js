@@ -36,16 +36,11 @@ var fn4 = function(data, cb) {
 //    });
 //});
 
+var EventEmitter = require('events').EventEmitter;
+var events = new EventEmitter();
+
 function warp(fn1, data){
   var warpedTasks = [fn1];
-
-  var next = function(data, cb){
-    var currentTask = warpedTasks.shift();
-
-    if(currentTask){
-      currentTask(data, next);
-    }
-  };
 
   var service =  {
     then: function(fn){
@@ -54,10 +49,20 @@ function warp(fn1, data){
       return service;
     }
   };
+  //////////
+  var finished = function(data){
+    events.emit('finished', data);
+  };
 
-  process.nextTick(function(){
-    next(data);
+  events.on('finished', function(data){
+    var currentTask = warpedTasks.shift();
+
+    if(currentTask){
+        currentTask(data, finished);
+    }
   });
+
+  events.emit('finished');
 
   return service;
 }
