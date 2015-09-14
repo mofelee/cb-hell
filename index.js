@@ -36,9 +36,32 @@ var fn4 = function(data, cb) {
 //    });
 //});
 
-var EventEmitter = require('events').EventEmitter;
-var events = new EventEmitter();
+// var EventEmitter = require('events').EventEmitter;
+// var events = new EventEmitter();
 
+
+// 自己实现的事件管理
+var myEventEmiter = function(){
+  var myEvents = {};
+
+  var service = {
+    on: function(name, cb){
+      myEvents[name] = cb;
+    },
+    emit: function(name, data){
+      process.nextTick(function(){
+        myEvents[name](data);
+      });
+    }
+  };
+
+  return service;
+};
+
+var events = myEventEmiter();
+
+
+///////
 function warp(fn1, data){
   var warpedTasks = [fn1];
 
